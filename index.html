@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0d0c">
+  <title>国际象棋</title>
+  <meta name="description" content="支持人机与双人模式国际象棋，含合法走法提示、悔棋、三档难度、双主题与棋谱分页查看。">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="css/style.css?v=16">
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </span>
+        <h1>国际象棋</h1>
+      </div>
+      <div class="top-actions">
+        <button class="nav-btn" id="historyOpen" type="button">
+          棋谱<span class="nav-count mono" id="historyCount" hidden>0 步</span>
+        </button>
+        <button class="nav-btn" id="btnSettings" type="button">设置</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <div class="board-column">
+        <div class="player-strip" id="topPlayer">
+          <span class="player-dot" aria-hidden="true"></span>
+          <span class="player-name" id="topName">电脑 · 普通</span>
+          <span class="player-state" id="topState" hidden></span>
+          <div class="captures" id="topCaptures" aria-label="已被吃掉的棋子"></div>
+        </div>
+
+        <div class="board-frame">
+          <div class="board" id="board" role="grid" aria-label="国际象棋棋盘"></div>
+          <div class="board-overlay" id="boardOverlay" hidden>
+            <div class="result-card">
+              <span class="card-label">对局结束</span>
+              <h2 id="resultTitle">白方胜</h2>
+              <p id="resultReason">将杀</p>
+              <button class="btn btn-primary" id="resultAgain" type="button">再来一局</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="player-strip" id="bottomPlayer">
+          <span class="player-dot" aria-hidden="true"></span>
+          <span class="player-name" id="bottomName">你</span>
+          <span class="player-state" id="bottomState" hidden></span>
+          <div class="captures" id="bottomCaptures" aria-label="已被吃掉的棋子"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <button class="fab" id="fabNew" type="button">新对局</button>
+
+  <div class="modal drawer" id="historyDrawer" hidden>
+    <div class="modal-card drawer-card" role="dialog" aria-modal="true" aria-label="棋谱" tabindex="-1">
+      <div class="drawer-head">
+        <span class="card-label">棋谱</span>
+        <button class="ghost-btn" id="historyClose" type="button">关闭</button>
+      </div>
+      <div class="moves" id="historyMoves">
+        <p class="moves-empty">尚未落子</p>
+      </div>
+      <div class="history-pager" id="historyPager" hidden></div>
+    </div>
+  </div>
+
+  <div class="modal" id="promoModal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-label="选择升变棋子">
+      <span class="card-label">兵到底线，选择升变</span>
+      <div class="promo-grid" id="promoGrid"></div>
+      <button class="ghost-btn" id="promoCancel" type="button">取消</button>
+    </div>
+  </div>
+
+  <div class="modal" id="settingsModal" hidden>
+    <div class="modal-card settings-card" role="dialog" aria-modal="true" aria-label="设置" tabindex="-1">
+      <span class="card-label">设置</span>
+      <div class="setting-row">
+        <span class="setting-name">模式</span>
+        <div class="segmented" id="modeGroup" role="group" aria-label="模式">
+          <button type="button" data-mode="ai" class="is-active" aria-pressed="true">人机</button>
+          <button type="button" data-mode="human" aria-pressed="false">双人</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <span class="setting-name">执子</span>
+        <div class="segmented" id="sideGroup" role="group" aria-label="执子">
+          <button type="button" data-side="white" class="is-active" aria-pressed="true">白</button>
+          <button type="button" data-side="black" aria-pressed="false">黑</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <span class="setting-name">难度</span>
+        <div class="segmented" id="difficultyGroup" role="group" aria-label="难度">
+          <button type="button" data-difficulty="easy" aria-pressed="false">简单</button>
+          <button type="button" data-difficulty="normal" class="is-active" aria-pressed="true">普通</button>
+          <button type="button" data-difficulty="hard" aria-pressed="false">困难</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <span class="setting-name">主题颜色</span>
+        <div class="segmented" id="themeGroup" role="group" aria-label="主题颜色">
+          <button type="button" data-theme="olive" class="is-active" aria-pressed="true">橄榄绿</button>
+          <button type="button" data-theme="melon" aria-pressed="false">西瓜红</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <span class="setting-name">音效</span>
+        <button class="switch is-on" id="soundToggle" type="button" aria-pressed="true" aria-label="音效开关"><span></span></button>
+      </div>
+      <button class="btn btn-primary btn-wide" id="settingsDone" type="button">完成</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <p class="sr-only" id="statusLive" role="status" aria-live="polite"></p>
+
+  <script src="js/engine.js?v=16"></script>
+  <script src="js/openings.js?v=16"></script>
+  <script src="js/ai.js?v=16"></script>
+  <script src="js/pieces.js?v=16"></script>
+  <script src="js/ui.js?v=16"></script>
+</body>
+</html>
