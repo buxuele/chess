@@ -6,6 +6,8 @@
 
 网页版双击 just_run.bat 启动本地服务，浏览器自动打开对局页面；桌面版双击 Chess.app 直接开窗，不经过浏览器与本地服务。两种形态的界面、交互与棋力完全一致，桌面版只是把同一份页面装进原生窗口。无需数据库与前后台，网页版服务端只使用 Python 标准库。棋子使用开源 cburnett 套装，绘制者为 Colin M.L. Burnett，授权 CC BY-SA 3.0（https://creativecommons.org/licenses/by-sa/3.0/）。
 
+在线试玩：https://buxuele.github.io/chess/
+
 ## 核心功能
 
 1. 人机对战：AI 三档难度，困难档思考 2.6 秒、普通档 1 秒，内置 22 条开局线路；评估覆盖子力、位置、兵结构与王安全；在 Worker 线程计算，失败自动回退主线程；执白或执黑可选。
