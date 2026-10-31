@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 
 const DIFFICULTY_LABEL = { easy: '简单', normal: '普通', hard: '困难' };
+const BG_PRESETS = ['#f3f1eb', '#e0e3df', '#cfd3cd', '#bcc1bb', '#a3a9a3', '#2f3431'];
 
 export default function SettingsDrawer({
   open,
@@ -11,6 +12,7 @@ export default function SettingsDrawer({
   onDifficulty,
   onSpeed,
   onTheme,
+  onBg,
   onSound,
   onExport,
   onClear
@@ -156,6 +158,32 @@ export default function SettingsDrawer({
               aria-pressed={view.speed === 'slow'}
               onClick={function () { onSpeed('slow'); }}
             >慢</button>
+          </div>
+        </div>
+
+        <div className="setting-row">
+          <span className="setting-name">背景颜色</span>
+          <div className="bg-picker">
+            {BG_PRESETS.map(function (color) {
+              return (
+                <button
+                  key={color}
+                  type="button"
+                  className={'bg-swatch' + (view.bg === color ? ' is-active' : '')}
+                  style={{ background: color }}
+                  aria-label={'背景 ' + color}
+                  aria-pressed={view.bg === color}
+                  onClick={function () { onBg(color); }}
+                />
+              );
+            })}
+            <input
+              className="bg-input"
+              type="color"
+              value={view.bg}
+              aria-label="自定义背景颜色"
+              onChange={function (event) { onBg(event.target.value); }}
+            />
           </div>
         </div>
 

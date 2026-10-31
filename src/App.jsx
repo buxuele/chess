@@ -82,6 +82,7 @@ export default function App() {
             status={view.status}
             mode={view.mode}
             humanColor={view.humanColor}
+            quote={view.resultQuote}
             onAgain={store.newGame}
           />
         </div>
@@ -96,6 +97,7 @@ export default function App() {
         onDifficulty={store.setDifficulty}
         onSpeed={store.setSpeed}
         onTheme={store.setTheme}
+        onBg={store.setBg}
         onSound={store.setSound}
         onExport={store.exportHistory}
         onClear={store.clearHistory}

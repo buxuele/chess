@@ -7,7 +7,36 @@ const HISTORY_KEY = 'chess.history.v1';
 const HISTORY_LIMIT = 200;
 const SPEED_CELL = { fast: 0.1, normal: 0.15, slow: 0.2 };
 const THINK_MIN = { easy: 450, normal: 700, hard: 1000 };
+const DEFAULT_BG = '#cfd3cd';
+
+function luminance(hex) {
+  const parts = [1, 3, 5].map(function (i) {
+    const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * parts[0] + 0.7152 * parts[1] + 0.0722 * parts[2];
+}
+
+function applyBackground(bg) {
+  document.documentElement.style.setProperty('--bg', bg);
+  document.documentElement.dataset.tone = luminance(bg) > 0.45 ? 'light' : 'dark';
+}
 const PIECE_NAMES = { 1: '兵', 2: '马', 3: '象', 4: '车', 5: '后', 6: '王' };
+const QUOTES = {
+  win_easy: ['赢个简单档，瞧把你厉害的', '电脑让着你呢，别当真', '这水平，敢不敢调高难度'],
+  win_normal: ['赢是赢了，就是有点费劲', '普通档而已，别飘', '再来一局，敢不敢换困难'],
+  win_hard: ['行，这局算你厉害。再来一局？', '困难档都拦不住你，有点东西'],
+  lose_easy: ['简单档都能输，先去热个身？', '电脑：我还没出力，你就倒下了', '这局不算，再来一局找回场子'],
+  lose_normal: ['普通档都打不过，还敢点困难吗？', '你的王已经申请换队友了', '别走，再来一局证明自己'],
+  lose_hard: ['输给困难档不丢人，不敢再来才丢人', '差一点就赢了，就差那么一点'],
+  draw: ['菜得势均力敌', '谁也没赢，互相伤害', '棋盘说你们两个都得多练'],
+  resign: ['跑得比棋子还快', '认输按得挺熟练，是练过吧', '棋可以输，气势不能丢'],
+  duel: ['白方收工，黑方不服', '这局有来有回，下一局换你先手', '胜负已分，握手言和还早']
+};
+
+function pickOne(list) {
+  return list[Math.floor(Math.random() * list.length)];
+}
 const REASON_TEXT = {
   checkmate: '将杀',
   stalemate: '逼和',
@@ -37,7 +66,8 @@ function saveSettings(state) {
       sound: state.sound,
       flipped: state.flipped,
       side: state.humanColor === Engine.BLACK ? 'black' : 'white',
-      theme: state.theme
+      theme: state.theme,
+      bg: state.bg
     }));
   } catch (err) {
     console.warn('设置保存失败', err);
@@ -95,6 +125,7 @@ export function createGame() {
     humanColor: saved.side === 'black' ? Engine.BLACK : Engine.WHITE,
     flipped: false,
     theme: saved.theme === 'melon' ? 'melon' : 'olive',
+    bg: typeof saved.bg === 'string' && /^#[0-9a-f]{6}$/i.test(saved.bg) ? saved.bg.toLowerCase() : DEFAULT_BG,
     sound: typeof saved.sound === 'boolean' ? saved.sound : true,
     selected: -1,
     legal: [],
@@ -109,6 +140,7 @@ export function createGame() {
     toast: '',
     toastVisible: false,
     resultVisible: false,
+    resultQuote: '',
     anim: null,
     resetToken: 0
   };
@@ -254,10 +286,12 @@ export function createGame() {
       humanColor: s.humanColor,
       flipped: s.flipped,
       theme: s.theme,
+      bg: s.bg,
       sound: s.sound,
       toast: s.toast,
       toastVisible: s.toastVisible,
       resultVisible: s.resultVisible,
+      resultQuote: s.resultQuote,
       anim: s.anim,
       resetToken: s.resetToken,
       historyCount: history.length + (current.moves.length ? 1 : 0),
@@ -379,11 +413,21 @@ export function createGame() {
     maybeAI();
   }
 
+  function pickQuote(status) {
+    if (status.reason === 'resign') return pickOne(QUOTES.resign);
+    if (status.result === 'draw') return pickOne(QUOTES.draw);
+    if (s.mode === 'human') return pickOne(QUOTES.duel);
+    const playerWon = (status.result === 'white') === (s.humanColor === Engine.WHITE);
+    const key = (playerWon ? 'win_' : 'lose_') + s.difficulty;
+    return pickOne(QUOTES[key] || QUOTES.lose_normal);
+  }
+
   function conclude(status) {
     s.status = status;
     s.gameOver = true;
     s.thinking = false;
     activeRequest = 0;
+    s.resultQuote = pickQuote(status);
     hideToast();
     if (s.sound) playSound('end');
     finishRecord(status.result, status.reason, statusSentence());
@@ -548,6 +592,7 @@ export function createGame() {
     s.status = Engine.gameStatus(engine, 1);
     s.resignArmed = false;
     s.anim = null;
+    s.resultQuote = '';
     s.resetToken += 1;
     window.clearTimeout(resignTimer);
     window.clearTimeout(hintTimer);
@@ -725,6 +770,14 @@ export function createGame() {
     commit();
   }
 
+  function setBg(bg) {
+    if (!/^#[0-9a-f]{6}$/i.test(bg)) return;
+    s.bg = bg.toLowerCase();
+    applyBackground(s.bg);
+    saveSettings(s);
+    commit();
+  }
+
   function setSound(next) {
     s.sound = typeof next === 'boolean' ? next : !s.sound;
     saveSettings(s);
@@ -789,6 +842,7 @@ export function createGame() {
   }
 
   document.documentElement.dataset.theme = s.theme === 'melon' ? 'melon' : '';
+  applyBackground(s.bg);
 
   return {
     attach,
@@ -809,6 +863,7 @@ export function createGame() {
     setDifficulty,
     setSpeed,
     setTheme,
+    setBg,
     setSound,
     exportHistory,
     clearHistory,

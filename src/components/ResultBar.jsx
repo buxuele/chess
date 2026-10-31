@@ -7,7 +7,7 @@ const REASON_TEXT = {
   resign: '一方认输'
 };
 
-export default function ResultBar({ visible, status, mode, humanColor, onAgain }) {
+export default function ResultBar({ visible, status, mode, humanColor, quote, onAgain }) {
   if (!visible || !status) return null;
 
   const draw = status.result === 'draw';
@@ -27,8 +27,9 @@ export default function ResultBar({ visible, status, mode, humanColor, onAgain }
       <div className="result-main">
         <span className="result-title" id="resultTitle">{title}</span>
         <span className="result-reason" id="resultReason">{REASON_TEXT[status.reason] || ''}</span>
+        {quote ? <span className="result-quote">{quote}</span> : null}
       </div>
-      <button className="result-again" type="button" onClick={onAgain}>再来一局</button>
+      <button className="result-again" type="button" onClick={onAgain}>不服再来</button>
     </div>
   );
 }
