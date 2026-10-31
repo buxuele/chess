@@ -5,7 +5,7 @@ import { playSound } from './sound.js';
 const SETTINGS_KEY = 'chess.settings.v1';
 const HISTORY_KEY = 'chess.history.v1';
 const HISTORY_LIMIT = 200;
-const SPEED_DUR = { fast: 0.4, normal: 0.8, slow: 1.2 };
+const SPEED_CELL = { fast: 0.1, normal: 0.15, slow: 0.2 };
 const THINK_MIN = { easy: 450, normal: 700, hard: 1000 };
 const PIECE_NAMES = { 1: '兵', 2: '马', 3: '象', 4: '车', 5: '后', 6: '王' };
 const REASON_TEXT = {
@@ -91,7 +91,7 @@ export function createGame() {
   const s = {
     mode: saved.mode === 'human' ? 'human' : 'ai',
     difficulty: AI.DIFFICULTIES[saved.difficulty] ? saved.difficulty : 'normal',
-    speed: SPEED_DUR[saved.speed] ? saved.speed : 'slow',
+    speed: SPEED_CELL[saved.speed] ? saved.speed : 'slow',
     humanColor: saved.side === 'black' ? Engine.BLACK : Engine.WHITE,
     flipped: false,
     theme: saved.theme === 'melon' ? 'melon' : 'olive',
@@ -109,7 +109,8 @@ export function createGame() {
     toast: '',
     toastVisible: false,
     resultVisible: false,
-    anim: null
+    anim: null,
+    resetToken: 0
   };
 
   if (saved.side === 'black') s.flipped = true;
@@ -258,6 +259,7 @@ export function createGame() {
       toastVisible: s.toastVisible,
       resultVisible: s.resultVisible,
       anim: s.anim,
+      resetToken: s.resetToken,
       historyCount: history.length + (current.moves.length ? 1 : 0),
       finishedCount: history.length,
       statusText: statusSentence()
@@ -366,7 +368,7 @@ export function createGame() {
     s.anim = instant ? null : {
       from: move.from,
       to: move.to,
-      dur: SPEED_DUR[s.speed] || 1.2
+      cellTime: SPEED_CELL[s.speed] || 0.2
     };
 
     if (status.over) {
@@ -546,6 +548,7 @@ export function createGame() {
     s.status = Engine.gameStatus(engine, 1);
     s.resignArmed = false;
     s.anim = null;
+    s.resetToken += 1;
     window.clearTimeout(resignTimer);
     window.clearTimeout(hintTimer);
     commit();
@@ -608,7 +611,7 @@ export function createGame() {
     s.gameOver = false;
     s.status = Engine.gameStatus(engine, repetitionCount());
     s.lastMove = s.sanList.length ? s.sanList[s.sanList.length - 1].move : null;
-    s.anim = { from: undoneMove.to, to: undoneMove.from, dur: SPEED_DUR[s.speed] || 1.2 };
+    s.anim = { from: undoneMove.to, to: undoneMove.from, cellTime: SPEED_CELL[s.speed] || 0.2 };
     s.selected = -1;
     s.legal = [];
     s.hint = null;
@@ -710,7 +713,7 @@ export function createGame() {
   }
 
   function setSpeed(speed) {
-    if (!SPEED_DUR[speed]) return;
+    if (!SPEED_CELL[speed]) return;
     s.speed = speed;
     saveSettings(s);
     commit();

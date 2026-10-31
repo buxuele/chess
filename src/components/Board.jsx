@@ -20,6 +20,8 @@ export default function Board({ view, onSelect, onPoint, onMove, onActivate, onB
   const boardRef = useRef(null);
   const dragRef = useRef(null);
   const [kbSquare, setKbSquare] = useState(-1);
+  const lastBoardRef = useRef(null);
+  const resetTokenRef = useRef(view.resetToken);
 
   const canMove = view.mode === 'human' || view.turn === view.humanColor;
   const checkSq = view.status && view.status.check ? view.kingSquare : -1;
@@ -37,6 +39,8 @@ export default function Board({ view, onSelect, onPoint, onMove, onActivate, onB
     const dx = fr.left - tr.left;
     const dy = fr.top - tr.top;
     if (!pieceEl.animate) return;
+    const cells = Math.sqrt(dx * dx + dy * dy) / (tr.width || 1);
+    const duration = Math.max(120, Math.round(cells * (anim.cellTime || 0.2) * 1000));
     pieceEl.classList.add('gliding');
     const motion = pieceEl.animate(
       [
@@ -44,7 +48,7 @@ export default function Board({ view, onSelect, onPoint, onMove, onActivate, onB
         { transform: 'translate(0px, 0px)' }
       ],
       {
-        duration: Math.round((anim.dur || 0.19) * 1000),
+        duration: duration,
         easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
         fill: 'none'
       }
@@ -67,6 +71,56 @@ export default function Board({ view, onSelect, onPoint, onMove, onActivate, onB
     document.addEventListener('keydown', onEscape);
     return function () { document.removeEventListener('keydown', onEscape); };
   }, []);
+
+  useEffect(function () {
+    lastBoardRef.current = view.board.slice();
+  }, [view]);
+
+  useLayoutEffect(function () {
+    if (view.resetToken === resetTokenRef.current) return;
+    resetTokenRef.current = view.resetToken;
+    const prev = lastBoardRef.current;
+    const root = boardRef.current;
+    if (!prev || !root) return;
+
+    const groups = {};
+    for (let sq = 0; sq < 128; sq++) {
+      if ((sq & 0x88) !== 0 || !prev[sq]) continue;
+      const key = prev[sq];
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(sq);
+    }
+
+    for (let sq = 0; sq < 128; sq++) {
+      if ((sq & 0x88) !== 0 || !view.board[sq]) continue;
+      const list = groups[view.board[sq]];
+      if (!list || !list.length) continue;
+      let best = 0;
+      let bestD = Infinity;
+      for (let i = 0; i < list.length; i++) {
+        const d = Math.abs((list[i] >> 4) - (sq >> 4)) + Math.abs((list[i] & 7) - (sq & 7));
+        if (d < bestD) {
+          bestD = d;
+          best = i;
+        }
+      }
+      const from = list.splice(best, 1)[0];
+      if (from === sq) continue;
+      const pieceEl = root.querySelector('.sq[data-sq="' + sq + '"] .piece');
+      const toCell = root.querySelector('.sq[data-sq="' + sq + '"]');
+      const fromCell = root.querySelector('.sq[data-sq="' + from + '"]');
+      if (!pieceEl || !toCell || !fromCell || !pieceEl.animate) continue;
+      const fr = fromCell.getBoundingClientRect();
+      const tr = toCell.getBoundingClientRect();
+      pieceEl.animate(
+        [
+          { transform: 'translate(' + (fr.left - tr.left) + 'px, ' + (fr.top - tr.top) + 'px)' },
+          { transform: 'translate(0px, 0px)' }
+        ],
+        { duration: 300, easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)', fill: 'none' }
+      );
+    }
+  }, [view.resetToken]);
 
   function isTarget(sq) {
     return view.legal.some(function (m) { return m.to === sq; });

@@ -190,7 +190,7 @@ export default function SettingsDrawer({
         </div>
 
         <div className="setting-row">
-          <span className="setting-name">个人链接</span>
+          <span className="setting-name">联系我</span>
           <div className="setting-actions">
             <a
               className="link-btn"

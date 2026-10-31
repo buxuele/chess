@@ -1,14 +1,15 @@
 :root {
-  --bg: #474a47;
-  --bg-soft: #505350;
-  --line: rgba(255, 255, 255, 0.075);
-  --line-strong: rgba(255, 255, 255, 0.14);
-  --text: #eef0e8;
-  --muted: #aeb6b0;
-  --dim: #9fa8a0;
+  --bg: #dfe2de;
+  --bg-soft: #d4d7d3;
+  --line: rgba(0, 0, 0, 0.09);
+  --line-strong: rgba(0, 0, 0, 0.18);
+  --text: #1b201d;
+  --muted: #4f5852;
+  --dim: #626b64;
   --olive: #9adb37;
   --olive-rgb: 154, 219, 55;
   --melon: #fc0377;
+  --accent-ink: #4e7a12;
   --light-sq: #ebecd0;
   --dark-sq: #739552;
   --hl-last: rgba(255, 234, 84, 0.6);
@@ -29,7 +30,7 @@
 
 html {
   -webkit-text-size-adjust: 100%;
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {
@@ -49,9 +50,9 @@ body::before {
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(900px 620px at 84% -12%, rgba(var(--olive-rgb), 0.07), transparent 62%),
-    radial-gradient(720px 520px at -12% 94%, rgba(252, 3, 119, 0.04), transparent 62%),
-    linear-gradient(180deg, #4c4f4b, #424542 70%);
+    radial-gradient(900px 620px at 84% -12%, rgba(var(--olive-rgb), 0.18), transparent 62%),
+    radial-gradient(720px 520px at -12% 94%, rgba(252, 3, 119, 0.05), transparent 62%),
+    linear-gradient(180deg, #e4e7e3, #d7dad6 70%);
 }
 
 button {
@@ -66,11 +67,11 @@ a {
 .shell {
   position: relative;
   z-index: 1;
-  --board-size: min(calc(100vw - 160px), 1200px, 100%, calc(100vh - 16px));
-  --board-size: min(calc(100vw - 160px), 1200px, 100%, calc(100dvh - 16px));
+  --board-size: min(calc(100vw - 160px), 1200px, 100%, 100vh);
+  --board-size: min(calc(100vw - 160px), 1200px, 100%, 100dvh);
   max-width: 1280px;
   margin: 0 auto;
-  padding: 8px 24px 8px;
+  padding: 0 24px;
 }
 
 .sr-only {
@@ -104,8 +105,8 @@ a {
 .top-btn {
   appearance: none;
   border: 1px solid var(--line-strong);
-  background: rgba(255, 255, 255, 0.05);
-  color: #d0d6d1;
+  background: rgba(0, 0, 0, 0.04);
+  color: #2a302c;
   border-radius: 999px;
   padding: 9px 16px;
   font-size: 12.5px;
@@ -117,8 +118,8 @@ a {
 
 .top-btn:hover {
   color: var(--text);
-  border-color: rgba(255, 255, 255, 0.24);
-  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(0, 0, 0, 0.26);
+  background: rgba(0, 0, 0, 0.07);
 }
 
 .top-btn:focus-visible {
@@ -310,19 +311,19 @@ a {
   z-index: 60;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
+  gap: 12px;
+  padding: 12px 16px;
   border-radius: 14px;
   border: 1px solid rgba(var(--olive-rgb), 0.22);
-  background: rgba(58, 63, 59, 0.94);
+  background: rgba(246, 248, 244, 0.96);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
 
 .result-dot {
   flex: 0 0 auto;
-  width: 5px;
-  height: 28px;
+  width: 6px;
+  height: 34px;
   border-radius: 99px;
   background: var(--muted);
 }
@@ -349,7 +350,7 @@ a {
 
 .result-title {
   font-family: var(--serif);
-  font-size: 18px;
+  font-size: 24px;
   font-weight: 600;
   letter-spacing: 0.04em;
   line-height: 1.2;
@@ -358,19 +359,19 @@ a {
 
 .result-reason {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
 }
 
 .result-again {
   flex: 0 0 auto;
   width: auto;
   margin-left: auto;
-  padding: 8px 14px;
+  padding: 10px 18px;
   border: 0;
   border-radius: 9px;
   background: var(--olive);
   color: #131708;
-  font-size: 12.5px;
+  font-size: 13.5px;
   font-weight: 600;
   letter-spacing: 0.02em;
   white-space: nowrap;
@@ -378,28 +379,29 @@ a {
   transition: background 0.16s, border-color 0.16s;
 }
 
-@media (min-width: 1250px) {
+@media (min-width: 1420px) {
   .result-bar {
     left: auto;
     right: 16px;
     bottom: auto;
     top: 50%;
     transform: translateY(-50%);
-    width: 168px;
+    width: 230px;
     flex-direction: column;
     align-items: stretch;
-    gap: 10px;
-    padding: 14px;
+    gap: 12px;
+    padding: 18px;
   }
 
   .result-dot {
-    width: 26px;
-    height: 4px;
+    width: 40px;
+    height: 5px;
   }
 
   .result-again {
     width: 100%;
     margin-left: 0;
+    padding: 11px 16px;
   }
 }
 
@@ -440,8 +442,8 @@ a {
 }
 
 .ghost-btn:hover {
-  color: var(--olive);
-  border-color: rgba(var(--olive-rgb), 0.4);
+  color: var(--accent-ink);
+  border-color: rgba(0, 0, 0, 0.22);
 }
 
 .ghost-btn:focus-visible {
@@ -464,7 +466,7 @@ a {
 .modal-card.settings-card .setting-row {
   text-align: left;
   padding: 11px 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.045);
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .modal-card.settings-card .drawer-head {
@@ -519,8 +521,8 @@ a {
 }
 
 .link-btn:hover {
-  border-color: rgba(var(--olive-rgb), 0.5);
-  color: var(--olive);
+  border-color: rgba(0, 0, 0, 0.24);
+  color: var(--accent-ink);
 }
 
 .link-btn:focus-visible {
@@ -533,8 +535,8 @@ a {
   gap: 2px;
   padding: 3px;
   border-radius: 9px;
-  background: rgba(0, 0, 0, 0.28);
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .segmented button {
@@ -553,7 +555,7 @@ a {
 }
 
 .segmented button.is-active {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.1);
   color: var(--text);
 }
 
@@ -568,7 +570,7 @@ a {
   height: 22px;
   border-radius: 999px;
   border: 0;
-  background: rgba(255, 255, 255, 0.13);
+  background: rgba(0, 0, 0, 0.18);
   cursor: pointer;
   transition: background 0.18s;
 }
@@ -580,7 +582,7 @@ a {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #cfd6c8;
+  background: #fbfcf9;
   transition: left 0.18s, background 0.18s;
 }
 
@@ -606,7 +608,7 @@ a {
   place-items: center;
   padding: 20px;
   overscroll-behavior: contain;
-  background: rgba(28, 32, 30, 0.72);
+  background: rgba(18, 22, 19, 0.35);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
 }
@@ -619,8 +621,8 @@ a {
   padding: 22px 24px 18px;
   border-radius: 20px;
   border: 1px solid var(--line-strong);
-  background: linear-gradient(180deg, #50554f, #444944);
-  box-shadow: 0 30px 70px -30px #000;
+  background: linear-gradient(180deg, #f5f7f3, #e8ebe6);
+  box-shadow: 0 30px 70px -30px rgba(0, 0, 0, 0.35);
 }
 
 .modal-card:focus {
@@ -670,7 +672,7 @@ a {
   padding: 10px 18px;
   border-radius: 999px;
   border: 1px solid var(--line-strong);
-  background: rgba(84, 90, 85, 0.96);
+  background: rgba(250, 251, 248, 0.98);
   color: var(--text);
   font-size: 12px;
   letter-spacing: 0.03em;
