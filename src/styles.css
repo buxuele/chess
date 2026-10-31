@@ -267,7 +267,7 @@ a {
 }
 
 .board.is-thinking .piece {
-  cursor: wait;
+  cursor: default;
 }
 
 .piece {
