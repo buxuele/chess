@@ -1,7 +1,4 @@
-'use strict';
-
-const path = require('path');
-const E = require(path.join(__dirname, '..', 'js', 'engine.js'));
+import E from '../src/game/engine.js';
 
 let passed = 0;
 let failed = 0;

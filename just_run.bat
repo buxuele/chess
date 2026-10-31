@@ -1,34 +1,14 @@
 @echo off
-setlocal
 cd /d "%~dp0"
-
-set "PYTHON=.venv\Scripts\python.exe"
-
-where python >nul 2>nul
+where node >nul 2>nul
 if errorlevel 1 (
-  echo Î´¼ì²âµ½ Python£¬ÇëÏÈ°²×° Python 3.10 »ò¸ü¸ß°æ±¾²¢¼ÓÈë PATH¡£
-  pause
+  echo æœªæ‰¾åˆ° Node.jsï¼Œè¯·å®‰è£… 18 æˆ–æ›´é«˜ç‰ˆæœ¬ã€‚
   exit /b 1
 )
-
-if not exist "%PYTHON%" (
-  echo Ê×´ÎÔËĞĞ£¬ÕıÔÚ´´½¨ĞéÄâ»·¾³...
-  python -m venv .venv
-  if errorlevel 1 (
-    echo ĞéÄâ»·¾³´´½¨Ê§°Ü¡£
-    pause
-    exit /b 1
-  )
+if not exist node_modules (
+  echo é¦–æ¬¡è¿è¡Œï¼Œå®‰è£…ä¾èµ–...
+  call npm install --no-audit --no-fund
 )
-
-for %%A in (requirements.txt) do set "REQ_SIZE=%%~zA"
-
-if defined REQ_SIZE if not "%REQ_SIZE%"=="0" (
-  echo ÕıÔÚ¼ì²éÒÀÀµ...
-  "%PYTHON%" -m pip install -r requirements.txt --disable-pip-version-check -q
-)
-
-echo ÕıÔÚÆô¶¯±¾µØ·şÎñ...
-"%PYTHON%" tools\serve.py
-
-if errorlevel 1 pause
+echo å¯åŠ¨å¼€å‘æœåŠ¡å™¨ http://127.0.0.1:8000/
+start "" http://127.0.0.1:8000/
+call npx vite --host 127.0.0.1 --port 8000

@@ -1,9 +1,6 @@
-'use strict';
-
-const path = require('path');
-const E = require(path.join(__dirname, '..', 'js', 'engine.js'));
-global.ChessOpenings = require(path.join(__dirname, '..', 'js', 'openings.js'));
-const AI = require(path.join(__dirname, '..', 'js', 'ai.js'));
+import E from '../src/game/engine.js';
+import Book from '../src/game/openings.js';
+import AI from '../src/game/ai.js';
 
 let passed = 0;
 let failed = 0;
@@ -45,7 +42,7 @@ console.log('--- 简单档不丢子 ---');
 })();
 
 console.log('--- 开局库 ---');
-check('开局库线路数', AI.DIFFICULTIES && global.ChessOpenings.size(), 22);
+check('开局库线路数', AI.DIFFICULTIES && Book.size(), 22);
 (function () {
   const state = E.createState();
   const first = AI.search(state, { depth: 3, timeLimit: 2000 });

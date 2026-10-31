@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0d0c">
+  <title>国际象棋</title>
+  <meta name="description" content="支持人机与双人模式国际象棋，含合法走法提示、悔棋、三档难度、双主题与音效。">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="stylesheet" href="css/style.css?v=38">
+</head>
+<body>
+  <div class="shell">
+    <main class="layout">
+      <div class="top-actions">
+        <button class="top-btn" id="btnSettings" type="button">设置</button>
+        <button class="top-btn top-btn-primary" id="fabNew" type="button">新对局</button>
+      </div>
+
+      <div class="board-column">
+        <div class="board-frame">
+          <div class="board" id="board" role="grid" aria-label="国际象棋棋盘"></div>
+        </div>
+
+        <div class="result-bar" id="resultBar" hidden>
+          <span class="result-dot" aria-hidden="true"></span>
+          <div class="result-main">
+            <span class="result-title" id="resultTitle">白方胜</span>
+            <span class="result-reason" id="resultReason">将杀</span>
+          </div>
+          <button class="result-again" id="resultAgain" type="button">再来一局</button>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <div class="modal drawer" id="settingsModal" hidden>
+    <div class="modal-card drawer-card settings-card" role="dialog" aria-modal="true" aria-label="设置" tabindex="-1">
+      <div class="drawer-head">
+        <span class="card-label">设置</span>
+        <button class="ghost-btn" id="settingsDone" type="button">关闭</button>
+      </div>
+      <div class="setting-row">
+        <span class="setting-name">模式</span>
+        <div class="segmented" id="modeGroup" role="group" aria-label="模式">
+          <button type="button" data-mode="ai" class="is-active" aria-pressed="true">人机</button>
+          <button type="button" data-mode="human" aria-pressed="false">双人</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <span class="setting-name">执子</span>
+        <div class="segmented" id="sideGroup" role="group" aria-label="执子">
+          <button type="button" data-side="white" class="is-active" aria-pressed="true">白</button>
+          <button type="button" data-side="black" aria-pressed="false">黑</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <span class="setting-name">难度</span>
+        <div class="segmented" id="difficultyGroup" role="group" aria-label="难度">
+          <button type="button" data-difficulty="easy" aria-pressed="false">简单</button>
+          <button type="button" data-difficulty="normal" class="is-active" aria-pressed="true">普通</button>
+          <button type="button" data-difficulty="hard" aria-pressed="false">困难</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <span class="setting-name">主题颜色</span>
+        <div class="segmented" id="themeGroup" role="group" aria-label="主题颜色">
+          <button type="button" data-theme="olive" class="is-active" aria-pressed="true">橄榄绿</button>
+          <button type="button" data-theme="melon" aria-pressed="false">西瓜红</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <span class="setting-name">移动速度</span>
+        <div class="segmented" id="speedGroup" role="group" aria-label="移动速度">
+          <button type="button" data-speed="fast" aria-pressed="false">快</button>
+          <button type="button" data-speed="normal" aria-pressed="false">中</button>
+          <button type="button" data-speed="slow" class="is-active" aria-pressed="true">慢</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <span class="setting-name">音效</span>
+        <button class="switch is-on" id="soundToggle" type="button" aria-pressed="true" aria-label="音效开关"><span></span></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <p class="sr-only" id="statusLive" role="status" aria-live="polite"></p>
+
+  <script src="js/engine.js?v=38"></script>
+  <script src="js/openings.js?v=38"></script>
+  <script src="js/ai.js?v=38"></script>
+  <script src="js/pieces.js?v=38"></script>
+  <script src="js/ui.js?v=38"></script>
+</body>
+</html>
