@@ -162,6 +162,8 @@ export function createGame() {
   let hintTimer = null;
   let resignTimer = null;
   let resultTimer = null;
+  let soundTimers = [];
+  let animEndAt = 0;
   let history = loadHistory();
   let current = createRecord();
   let lastFinished = null;
@@ -365,6 +367,32 @@ export function createGame() {
     applyMove(chosen, instant);
   }
 
+  function clearSoundTimers() {
+    for (const id of soundTimers) window.clearTimeout(id);
+    soundTimers = [];
+  }
+
+  function laterSound(kind, ms) {
+    if (!s.sound) return;
+    if (ms <= 0) {
+      playSound(kind);
+      return;
+    }
+    const id = window.setTimeout(function () {
+      soundTimers = soundTimers.filter(function (x) { return x !== id; });
+      if (s.sound) playSound(kind);
+    }, ms);
+    soundTimers.push(id);
+  }
+
+  function moveDuration(move, instant) {
+    if (instant) return 0;
+    const dr = Math.abs((move.to >> 4) - (move.from >> 4));
+    const df = Math.abs((move.to & 7) - (move.from & 7));
+    const cells = Math.sqrt(dr * dr + df * df);
+    return Math.max(120, Math.round(cells * (SPEED_CELL[s.speed] || 0.2) * 1000));
+  }
+
   function applyMove(move, instant) {
     const mover = engine.turn;
     const san = Engine.moveToSan(engine, move, true);
@@ -393,20 +421,23 @@ export function createGame() {
       if (rec) rec.san = last.san;
     }
 
-    if (s.sound) {
-      if (move.flag === Engine.FLAG_KCASTLE || move.flag === Engine.FLAG_QCASTLE) playSound('castle');
-      else playSound(move.captured ? 'capture' : 'move');
-      if (status.check && !status.over) playSound('check');
-    }
-
+    const duration = moveDuration(move, instant);
     s.anim = instant ? null : {
       from: move.from,
       to: move.to,
       cellTime: SPEED_CELL[s.speed] || 0.2
     };
+    animEndAt = Date.now() + duration;
+    clearSoundTimers();
+
+    if (s.sound) {
+      if (move.flag === Engine.FLAG_KCASTLE || move.flag === Engine.FLAG_QCASTLE) playSound('castle');
+      else playSound(move.captured ? 'capture' : 'move');
+    }
+    if (status.check && !status.over) laterSound('check', duration + 60);
 
     if (status.over) {
-      conclude(status);
+      conclude(status, duration);
       return;
     }
     commit();
@@ -422,21 +453,22 @@ export function createGame() {
     return pickOne(QUOTES[key] || QUOTES.lose_normal);
   }
 
-  function conclude(status) {
+  function conclude(status, delay) {
     s.status = status;
     s.gameOver = true;
     s.thinking = false;
     activeRequest = 0;
     s.resultQuote = pickQuote(status);
     hideToast();
-    if (s.sound) playSound('end');
+    const wait = delay || 0;
+    laterSound('end', wait);
     finishRecord(status.result, status.reason, statusSentence());
     commit();
     window.clearTimeout(resultTimer);
     resultTimer = window.setTimeout(function () {
       s.resultVisible = true;
       commit();
-    }, 420);
+    }, Math.max(420, wait + 120));
   }
 
   function hideResult() {
@@ -495,7 +527,7 @@ export function createGame() {
       return;
     }
     if (data.id !== activeRequest) return;
-    const delay = Math.max(0, aiTarget - (Date.now() - aiStart));
+    const delay = Math.max(0, aiTarget - (Date.now() - aiStart), animEndAt - Date.now());
     window.setTimeout(function () {
       if (data.id !== activeRequest) return;
       if (s.gameOver || s.mode !== 'ai') return;
@@ -552,7 +584,7 @@ export function createGame() {
 
     s.thinking = true;
     aiStart = Date.now();
-    aiTarget = THINK_MIN[s.difficulty] || 700;
+    aiTarget = Math.max(THINK_MIN[s.difficulty] || 700, Math.max(0, animEndAt - Date.now()) + 150);
     const id = ++seq;
     activeRequest = id;
     commit();
@@ -574,6 +606,8 @@ export function createGame() {
   function newGame() {
     cancelAI();
     hideResult();
+    clearSoundTimers();
+    animEndAt = 0;
     if (current.moves.length) {
       finishRecord('aborted', 'new-game', '未完成');
     } else {
@@ -617,6 +651,7 @@ export function createGame() {
     cancelAI();
     hideResult();
     window.clearTimeout(hintTimer);
+    clearSoundTimers();
 
     if (lastFinished) {
       const idx = history.findIndex(function (g) { return g.id === lastFinished.id; });
@@ -657,6 +692,7 @@ export function createGame() {
     s.status = Engine.gameStatus(engine, repetitionCount());
     s.lastMove = s.sanList.length ? s.sanList[s.sanList.length - 1].move : null;
     s.anim = { from: undoneMove.to, to: undoneMove.from, cellTime: SPEED_CELL[s.speed] || 0.2 };
+    animEndAt = Date.now() + moveDuration({ from: undoneMove.to, to: undoneMove.from }, false);
     s.selected = -1;
     s.legal = [];
     s.hint = null;
@@ -799,6 +835,7 @@ export function createGame() {
       worker = null;
     }
     flushHistory();
+    clearSoundTimers();
     window.removeEventListener('pagehide', flushHistory);
     window.removeEventListener('storage', onStorage);
     window.clearTimeout(toastTimer);
