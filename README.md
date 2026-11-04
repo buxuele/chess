@@ -1,6 +1,8 @@
 # 国际象棋
 
-React 加 Vite 的纯前端国际象棋，可部署到 Vercel 与 GitHub Pages。
+React 加 Vite 的纯前端国际象棋，可部署到 Vercel。
+
+在线试玩：https://chess-beryl-five.vercel.app/
 
 ## 功能
 
@@ -18,8 +20,7 @@ React 加 Vite 的纯前端国际象棋，可部署到 Vercel 与 GitHub Pages�
 
 ## 部署
 
-1. Vercel 导入仓库，自动识别 Vite，构建 `npm run build`，输出 dist。
-2. GitHub Pages 把仓库 Settings 里的 Pages Source 改为 GitHub Actions，推送到 main 会自动构建并发布到 https://buxuele.github.io/chess/ 。
+Vercel 导入仓库，自动识别 Vite，构建 `npm run build`，输出 dist。
 
 ## 目录
 
