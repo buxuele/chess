@@ -1,10 +1,9 @@
-export default function ResultBar({ visible, status, mode, humanColor, onAgain }) {
+export default function ResultBar({ visible, status, humanColor, onAgain }) {
   if (!visible || !status) return null;
 
   const draw = status.result === 'draw';
   let title;
   if (draw) title = '和棋';
-  else if (mode === 'human') title = status.result === 'white' ? '白方胜' : '黑方胜';
   else {
     const won = (status.result === 'white') === (humanColor === 1);
     title = won ? '你赢了' : '你输了';

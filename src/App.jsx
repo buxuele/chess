@@ -103,7 +103,6 @@ export default function App() {
           <ResultBar
             visible={view.resultVisible}
             status={view.status}
-            mode={view.mode}
             humanColor={view.humanColor}
             onAgain={store.newGame}
           />
