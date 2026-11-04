@@ -105,7 +105,6 @@ export default function App() {
             status={view.status}
             mode={view.mode}
             humanColor={view.humanColor}
-            quote={view.resultQuote}
             onAgain={store.newGame}
           />
         </div>

@@ -22,21 +22,6 @@ function applyBackground(bg) {
   document.documentElement.dataset.tone = luminance(bg) > 0.45 ? 'light' : 'dark';
 }
 const PIECE_NAMES = { 1: '兵', 2: '马', 3: '象', 4: '车', 5: '后', 6: '王' };
-const QUOTES = {
-  win_easy: ['简单档，别得意', '让着你呢', '敢升难度吗'],
-  win_normal: ['赢了，但费劲', '别飘', '换困难试试'],
-  win_hard: ['算你厉害', '再来一局？'],
-  lose_easy: ['先去热身', '我还没出力', '再来找回场子'],
-  lose_normal: ['王想换队友', '别走，再来', '证明自己'],
-  lose_hard: ['不敢再来才丢人', '就差一点'],
-  draw: ['菜得势均力敌', '互相伤害', '都得多练'],
-  resign: ['跑得挺快', '认输挺熟练', '气势不能丢'],
-  duel: ['黑方不服', '换你先手', '握手言和还早']
-};
-
-function pickOne(list) {
-  return list[Math.floor(Math.random() * list.length)];
-}
 const REASON_TEXT = {
   checkmate: '将杀',
   stalemate: '逼和',
@@ -142,7 +127,6 @@ export function createGame() {
     toast: '',
     toastVisible: false,
     resultVisible: false,
-    resultQuote: '',
     anim: null,
     resetToken: 0
   };
@@ -296,7 +280,6 @@ export function createGame() {
       toast: s.toast,
       toastVisible: s.toastVisible,
       resultVisible: s.resultVisible,
-      resultQuote: s.resultQuote,
       anim: s.anim,
       resetToken: s.resetToken,
       historyCount: history.length + (current.moves.length ? 1 : 0),
@@ -447,21 +430,11 @@ export function createGame() {
     maybeAI();
   }
 
-  function pickQuote(status) {
-    if (status.reason === 'resign') return pickOne(QUOTES.resign);
-    if (status.result === 'draw') return pickOne(QUOTES.draw);
-    if (s.mode === 'human') return pickOne(QUOTES.duel);
-    const playerWon = (status.result === 'white') === (s.humanColor === Engine.WHITE);
-    const key = (playerWon ? 'win_' : 'lose_') + s.difficulty;
-    return pickOne(QUOTES[key] || QUOTES.lose_normal);
-  }
-
   function conclude(status, delay) {
     s.status = status;
     s.gameOver = true;
     s.thinking = false;
     activeRequest = 0;
-    s.resultQuote = pickQuote(status);
     hideToast();
     const wait = delay || 0;
     laterSound('end', wait);
@@ -629,7 +602,6 @@ export function createGame() {
     s.status = Engine.gameStatus(engine, 1);
     s.resignArmed = false;
     s.anim = null;
-    s.resultQuote = '';
     s.resetToken += 1;
     window.clearTimeout(resignTimer);
     window.clearTimeout(hintTimer);
@@ -892,17 +864,6 @@ export function createGame() {
     ensureWorker();
     ensureListeners();
     fn(getView());
-    maybeWelcome();
-  }
-
-  function maybeWelcome() {
-    try {
-      if (localStorage.getItem('chess.seen.v1')) return;
-      localStorage.setItem('chess.seen.v1', '1');
-    } catch (err) {
-      return;
-    }
-    toast('H 提示，U 悔棋，R 认输', 4200);
   }
 
   document.documentElement.dataset.theme = s.theme === 'melon' ? 'melon' : '';

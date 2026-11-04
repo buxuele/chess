@@ -1,15 +1,4 @@
-import { downloadShareImage } from '../game/shareImage.js';
-
-const REASON_TEXT = {
-  checkmate: '将杀',
-  stalemate: '逼和',
-  fifty: '五十回合规则',
-  material: '子力不足',
-  repetition: '三次重复局面',
-  resign: '一方认输'
-};
-
-export default function ResultBar({ visible, status, mode, humanColor, quote, onAgain }) {
+export default function ResultBar({ visible, status, mode, humanColor, onAgain }) {
   if (!visible || !status) return null;
 
   const draw = status.result === 'draw';
@@ -26,25 +15,8 @@ export default function ResultBar({ visible, status, mode, humanColor, quote, on
   return (
     <div className={'result-bar ' + cls} id="resultBar">
       <span className="result-dot" aria-hidden="true"></span>
-      <div className="result-main">
-        <span className="result-title" id="resultTitle">{title}</span>
-        <span className="result-reason" id="resultReason">{REASON_TEXT[status.reason] || ''}</span>
-        {quote ? <span className="result-quote">{quote}</span> : null}
-      </div>
-      <div className="result-actions">
-        <button className="result-again" type="button" onClick={onAgain}>不服再来</button>
-        <button
-          className="result-share"
-          type="button"
-          onClick={function () {
-            downloadShareImage({
-              title: title,
-              reason: REASON_TEXT[status.reason] || '',
-              quote: quote || ''
-            });
-          }}
-        >存图</button>
-      </div>
+      <span className="result-title" id="resultTitle">{title}</span>
+      <button className="result-again" type="button" onClick={onAgain}>不服再来</button>
     </div>
   );
 }
