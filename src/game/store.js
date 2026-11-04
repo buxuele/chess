@@ -23,15 +23,15 @@ function applyBackground(bg) {
 }
 const PIECE_NAMES = { 1: '兵', 2: '马', 3: '象', 4: '车', 5: '后', 6: '王' };
 const QUOTES = {
-  win_easy: ['赢个简单档，瞧把你厉害的', '电脑让着你呢，别当真', '这水平，敢不敢调高难度'],
-  win_normal: ['赢是赢了，就是有点费劲', '普通档而已，别飘', '再来一局，敢不敢换困难'],
-  win_hard: ['行，这局算你厉害。再来一局？', '困难档都拦不住你，有点东西'],
-  lose_easy: ['简单档都能输，先去热个身？', '电脑：我还没出力，你就倒下了', '这局不算，再来一局找回场子'],
-  lose_normal: ['你的王已经申请换队友了', '别走，再来一局证明自己'],
-  lose_hard: ['输给困难档不丢人，不敢再来才丢人', '差一点就赢了，就差那么一点'],
-  draw: ['菜得势均力敌', '谁也没赢，互相伤害', '棋盘说你们两个都得多练'],
-  resign: ['跑得比棋子还快', '认输按得挺熟练，是练过吧', '棋可以输，气势不能丢'],
-  duel: ['白方收工，黑方不服', '这局有来有回，下一局换你先手', '胜负已分，握手言和还早']
+  win_easy: ['简单档，别得意', '让着你呢', '敢升难度吗'],
+  win_normal: ['赢了，但费劲', '别飘', '换困难试试'],
+  win_hard: ['算你厉害', '再来一局？'],
+  lose_easy: ['先去热身', '我还没出力', '再来找回场子'],
+  lose_normal: ['王想换队友', '别走，再来', '证明自己'],
+  lose_hard: ['不敢再来才丢人', '就差一点'],
+  draw: ['菜得势均力敌', '互相伤害', '都得多练'],
+  resign: ['跑得挺快', '认输挺熟练', '气势不能丢'],
+  duel: ['黑方不服', '换你先手', '握手言和还早']
 };
 
 function pickOne(list) {
@@ -64,6 +64,7 @@ function saveSettings(state) {
       difficulty: state.difficulty,
       speed: state.speed,
       sound: state.sound,
+      volume: state.volume,
       flipped: state.flipped,
       side: state.humanColor === Engine.BLACK ? 'black' : 'white',
       theme: state.theme,
@@ -127,6 +128,7 @@ export function createGame() {
     theme: saved.theme === 'melon' ? 'melon' : 'olive',
     bg: typeof saved.bg === 'string' && /^#[0-9a-f]{6}$/i.test(saved.bg) ? saved.bg.toLowerCase() : DEFAULT_BG,
     sound: typeof saved.sound === 'boolean' ? saved.sound : true,
+    volume: typeof saved.volume === 'number' ? Math.min(1, Math.max(0, saved.volume)) : 0.8,
     selected: -1,
     legal: [],
     lastMove: null,
@@ -290,6 +292,7 @@ export function createGame() {
       theme: s.theme,
       bg: s.bg,
       sound: s.sound,
+      volume: s.volume,
       toast: s.toast,
       toastVisible: s.toastVisible,
       resultVisible: s.resultVisible,
@@ -329,14 +332,14 @@ export function createGame() {
     return s.positionKeys.filter(function (k) { return k === key; }).length;
   }
 
-  function toast(message) {
+  function toast(message, duration) {
     s.toast = message;
     s.toastVisible = true;
     window.clearTimeout(toastTimer);
     toastTimer = window.setTimeout(function () {
       s.toastVisible = false;
       commit();
-    }, 2200);
+    }, duration || 2200);
     commit();
   }
 
@@ -375,12 +378,12 @@ export function createGame() {
   function laterSound(kind, ms) {
     if (!s.sound) return;
     if (ms <= 0) {
-      playSound(kind);
+      playSound(kind, s.volume);
       return;
     }
     const id = window.setTimeout(function () {
       soundTimers = soundTimers.filter(function (x) { return x !== id; });
-      if (s.sound) playSound(kind);
+      if (s.sound) playSound(kind, s.volume);
     }, ms);
     soundTimers.push(id);
   }
@@ -431,8 +434,8 @@ export function createGame() {
     clearSoundTimers();
 
     if (s.sound) {
-      if (move.flag === Engine.FLAG_KCASTLE || move.flag === Engine.FLAG_QCASTLE) playSound('castle');
-      else playSound(move.captured ? 'capture' : 'move');
+      if (move.flag === Engine.FLAG_KCASTLE || move.flag === Engine.FLAG_QCASTLE) playSound('castle', s.volume);
+      else playSound(move.captured ? 'capture' : 'move', s.volume);
     }
     if (status.check && !status.over) laterSound('check', duration + 60);
 
@@ -818,7 +821,20 @@ export function createGame() {
     s.sound = typeof next === 'boolean' ? next : !s.sound;
     saveSettings(s);
     commit();
-    if (s.sound) playSound('move');
+    if (s.sound) playSound('move', s.volume);
+  }
+
+  function setVolume(value) {
+    const v = Math.min(1, Math.max(0, Number(value)));
+    if (!Number.isFinite(v)) return;
+    s.volume = v;
+    saveSettings(s);
+    commit();
+    if (s.sound) playSound('move', s.volume);
+  }
+
+  function getHistory() {
+    return history.slice();
   }
 
   function handleKey(key) {
@@ -876,6 +892,17 @@ export function createGame() {
     ensureWorker();
     ensureListeners();
     fn(getView());
+    maybeWelcome();
+  }
+
+  function maybeWelcome() {
+    try {
+      if (localStorage.getItem('chess.seen.v1')) return;
+      localStorage.setItem('chess.seen.v1', '1');
+    } catch (err) {
+      return;
+    }
+    toast('H 提示，U 悔棋，R 认输', 4200);
   }
 
   document.documentElement.dataset.theme = s.theme === 'melon' ? 'melon' : '';
@@ -902,6 +929,8 @@ export function createGame() {
     setTheme,
     setBg,
     setSound,
+    setVolume,
+    getHistory,
     exportHistory,
     clearHistory,
     handleKey,

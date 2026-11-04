@@ -23,24 +23,26 @@ function tone(ctx, freq, when, duration, type, volume, endFreq) {
   osc.stop(when + duration + 0.03);
 }
 
-export function playSound(kind) {
+export function playSound(kind, volume) {
+  const v = typeof volume === 'number' ? volume : 1;
+  if (v <= 0) return;
   const ctx = audio();
   if (!ctx) return;
   const now = ctx.currentTime;
   if (kind === 'move') {
-    tone(ctx, 430, now, 0.07, 'triangle', 0.13, 260);
+    tone(ctx, 430, now, 0.07, 'triangle', 0.13 * v, 260);
   } else if (kind === 'capture') {
-    tone(ctx, 240, now, 0.1, 'square', 0.11, 120);
-    tone(ctx, 95, now + 0.01, 0.16, 'sine', 0.14, 60);
+    tone(ctx, 240, now, 0.1, 'square', 0.11 * v, 120);
+    tone(ctx, 95, now + 0.01, 0.16, 'sine', 0.14 * v, 60);
   } else if (kind === 'castle') {
-    tone(ctx, 380, now, 0.06, 'triangle', 0.11, 280);
-    tone(ctx, 380, now + 0.09, 0.06, 'triangle', 0.11, 280);
+    tone(ctx, 380, now, 0.06, 'triangle', 0.11 * v, 280);
+    tone(ctx, 380, now + 0.09, 0.06, 'triangle', 0.11 * v, 280);
   } else if (kind === 'check') {
-    tone(ctx, 740, now, 0.09, 'triangle', 0.12);
-    tone(ctx, 980, now + 0.1, 0.12, 'triangle', 0.11);
+    tone(ctx, 740, now, 0.09, 'triangle', 0.12 * v);
+    tone(ctx, 980, now + 0.1, 0.12, 'triangle', 0.11 * v);
   } else if (kind === 'end') {
     [523, 659, 784].forEach(function (freq, i) {
-      tone(ctx, freq, now + i * 0.1, 0.34, 'sine', 0.11);
+      tone(ctx, freq, now + i * 0.1, 0.34, 'sine', 0.11 * v);
     });
   }
 }

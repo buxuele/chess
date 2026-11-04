@@ -14,8 +14,9 @@ export default function SettingsDrawer({
   onTheme,
   onBg,
   onSound,
+  onVolume,
   onExport,
-  onClear
+  onOpenHistory
 }) {
   const cardRef = useRef(null);
 
@@ -199,21 +200,35 @@ export default function SettingsDrawer({
         </div>
 
         <div className="setting-row">
+          <span className="setting-name">音量</span>
+          <input
+            className="volume-range"
+            type="range"
+            min="0"
+            max="100"
+            step="5"
+            value={Math.round(view.volume * 100)}
+            aria-label="音量"
+            onChange={function (event) { onVolume(Number(event.target.value) / 100); }}
+          />
+        </div>
+
+        <div className="setting-row">
           <span className="setting-name">对局历史</span>
           <div className="setting-actions">
             <span className="setting-count">{view.historyCount} 局</span>
             <button
               className="ghost-btn"
               type="button"
+              onClick={onOpenHistory}
+              disabled={view.historyCount === 0}
+            >查看</button>
+            <button
+              className="ghost-btn"
+              type="button"
               onClick={onExport}
               disabled={view.historyCount === 0}
             >导出 JSON</button>
-            <button
-              className="ghost-btn ghost-danger"
-              type="button"
-              onClick={onClear}
-              disabled={view.finishedCount === 0}
-            >清空</button>
           </div>
         </div>
 

@@ -34,6 +34,45 @@ const api = (function () {
   const PIECE_CHARS = { 1: 'P', 2: 'N', 3: 'B', 4: 'R', 5: 'Q', 6: 'K' };
   const CHAR_PIECES = { p: PAWN, n: KNIGHT, b: BISHOP, r: ROOK, q: QUEEN, k: KING };
 
+  function makeRng(seed) {
+    let value = seed >>> 0;
+    return function () {
+      value ^= value << 13;
+      value >>>= 0;
+      value ^= value >> 17;
+      value ^= value << 5;
+      value >>>= 0;
+      return value | 0;
+    };
+  }
+
+  const rng = makeRng(0x9e3779b9);
+  const PIECE_KEYS = new Int32Array(12 * 128);
+  for (let i = 0; i < PIECE_KEYS.length; i++) PIECE_KEYS[i] = rng();
+  const TURN_KEY = rng();
+  const CASTLE_KEYS = new Int32Array(16);
+  for (let i = 0; i < CASTLE_KEYS.length; i++) CASTLE_KEYS[i] = rng();
+  const EP_KEYS = new Int32Array(128);
+  for (let i = 0; i < EP_KEYS.length; i++) EP_KEYS[i] = rng();
+
+  function pieceIndex(piece, sq) {
+    const type = Math.abs(piece);
+    return ((piece > 0 ? type - 1 : type + 5) * 128) + sq;
+  }
+
+  function computeHash(state) {
+    let hash = 0;
+    for (let sq = 0; sq < 128; sq++) {
+      if ((sq & 0x88) !== 0) continue;
+      const piece = state.board[sq];
+      if (piece) hash ^= PIECE_KEYS[pieceIndex(piece, sq)];
+    }
+    if (state.turn === BLACK) hash ^= TURN_KEY;
+    hash ^= CASTLE_KEYS[state.castling & 15];
+    if (state.ep >= 0) hash ^= EP_KEYS[state.ep];
+    return hash;
+  }
+
   function isOnBoard(sq) {
     return (sq & 0x88) === 0;
   }
@@ -98,6 +137,7 @@ const api = (function () {
     state.halfmove = parts[4] ? Number(parts[4]) : 0;
     state.fullmove = parts[5] ? Number(parts[5]) : 1;
     state.history = [];
+    state.hash = computeHash(state);
     return state;
   }
 
@@ -110,7 +150,8 @@ const api = (function () {
       halfmove: 0,
       fullmove: 1,
       kings: { 1: -1, '-1': -1 },
-      history: []
+      history: [],
+      hash: 0
     };
     return loadFen(fen || START_FEN, state);
   }
@@ -161,6 +202,9 @@ const api = (function () {
     const board = state.board;
     const piece = move.piece;
     const type = Math.abs(piece);
+    const prevHash = state.hash;
+    const prevCastling = state.castling;
+    const prevEp = state.ep;
 
     state.history.push({
       move,
@@ -169,7 +213,8 @@ const api = (function () {
       ep: state.ep,
       halfmove: state.halfmove,
       kingsW: state.kings[WHITE],
-      kingsB: state.kings[BLACK]
+      kingsB: state.kings[BLACK],
+      hash: prevHash
     });
 
     board[move.from] = EMPTY;
@@ -204,6 +249,28 @@ const api = (function () {
     state.halfmove = type === PAWN || move.captured ? 0 : state.halfmove + 1;
     if (us === BLACK) state.fullmove++;
     state.turn = them;
+
+    let hash = prevHash;
+    hash ^= PIECE_KEYS[pieceIndex(piece, move.from)];
+    if (move.flag === FLAG_EP) {
+      hash ^= PIECE_KEYS[pieceIndex(them * PAWN, move.to - 16 * us)];
+    } else if (move.captured) {
+      hash ^= PIECE_KEYS[pieceIndex(move.captured, move.to)];
+    }
+    hash ^= PIECE_KEYS[pieceIndex(move.promotion ? move.promotion * us : piece, move.to)];
+    if (move.flag === FLAG_KCASTLE) {
+      hash ^= PIECE_KEYS[pieceIndex(us * ROOK, move.to + 1)];
+      hash ^= PIECE_KEYS[pieceIndex(us * ROOK, move.to - 1)];
+    } else if (move.flag === FLAG_QCASTLE) {
+      hash ^= PIECE_KEYS[pieceIndex(us * ROOK, move.to - 2)];
+      hash ^= PIECE_KEYS[pieceIndex(us * ROOK, move.to + 1)];
+    }
+    hash ^= CASTLE_KEYS[prevCastling & 15];
+    hash ^= CASTLE_KEYS[state.castling & 15];
+    if (prevEp >= 0) hash ^= EP_KEYS[prevEp];
+    if (state.ep >= 0) hash ^= EP_KEYS[state.ep];
+    hash ^= TURN_KEY;
+    state.hash = hash;
   }
 
   function unmakeMove(state) {
@@ -236,6 +303,7 @@ const api = (function () {
     if (us === BLACK) state.fullmove--;
     state.kings[WHITE] = undo.kingsW;
     state.kings[BLACK] = undo.kingsB;
+    state.hash = undo.hash;
     state.turn = us;
   }
 
@@ -509,7 +577,7 @@ const api = (function () {
     makeMove, unmakeMove,
     isOnBoard, fileOf, rankOf, sqOf, alg, fromAlg, colorOf, isAttacked, inCheck,
     generateMoves, generateLegalMoves, gameStatus, insufficientMaterial,
-    moveToSan, perft, findMove
+    moveToSan, perft, findMove, computeHash
   };
 })();
 

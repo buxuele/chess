@@ -90,6 +90,8 @@ const api = (function (E, Book) {
   const PAWN_COUNT = [new Uint8Array(8), new Uint8Array(8)];
   const HISTORY = new Int32Array(128 * 128);
   const PROMOTION_TYPES = { q: 5, r: 4, b: 3, n: 2 };
+  const TT_LIMIT = 100000;
+  let tt = new Map();
 
   let nodes = 0;
   let deadline = 0;
@@ -205,7 +207,7 @@ const api = (function (E, Book) {
     return state.turn === 1 ? score : -score;
   }
 
-  function orderMoves(moves, ply) {
+  function orderMoves(moves, ply, preferred) {
     const list = killers[ply];
     const k1 = list ? list[0] : -1;
     const k2 = list ? list[1] : -1;
@@ -213,6 +215,9 @@ const api = (function (E, Book) {
     for (const m of moves) {
       const key = moveKey(m);
       let s = 0;
+      if (preferred && m.from === preferred.from && m.to === preferred.to && m.promotion === preferred.promotion) {
+        s += 200000;
+      }
       if (m.captured) {
         s = 100000 + VALUE[Math.abs(m.captured)] * 10 - VALUE[Math.abs(m.piece)];
       }
@@ -255,6 +260,22 @@ const api = (function (E, Book) {
   function negamax(state, depth, alpha, beta, ply) {
     checkTime();
     if (state.halfmove >= 100) return 0;
+
+    const key = state.hash;
+    const hit = tt.get(key);
+    let ttMove = null;
+    if (hit) {
+      ttMove = hit.move;
+      if (hit.depth >= depth) {
+        let score = hit.score;
+        if (score > MATE - 1000) score -= ply;
+        else if (score < -MATE + 1000) score += ply;
+        if (hit.flag === 0) return score;
+        if (hit.flag === 1 && score >= beta) return beta;
+        if (hit.flag === 2 && score <= alpha) return alpha;
+      }
+    }
+
     if (depth <= 0) return quiesce(state, alpha, beta, ply);
 
     const moves = E.generateLegalMoves(state);
@@ -262,27 +283,38 @@ const api = (function (E, Book) {
       return E.inCheck(state, state.turn) ? -MATE + ply : 0;
     }
 
-    orderMoves(moves, ply);
+    orderMoves(moves, ply, ttMove);
+    const alpha0 = alpha;
     let best = -MATE * 2;
+    let bestMove = null;
     for (const move of moves) {
       E.makeMove(state, move);
       const score = -negamax(state, depth - 1, -beta, -alpha, ply + 1);
       E.unmakeMove(state);
-      if (score > best) best = score;
+      if (score > best) {
+        best = score;
+        bestMove = move;
+      }
       if (score > alpha) alpha = score;
       if (alpha >= beta) {
         if (!move.captured && !move.promotion) {
           const list = killers[ply] || (killers[ply] = [-1, -1]);
-          const key = moveKey(move);
-          if (list[0] !== key) {
+          const key2 = moveKey(move);
+          if (list[0] !== key2) {
             list[1] = list[0];
-            list[0] = key;
+            list[0] = key2;
           }
-          const next = HISTORY[key] + depth * depth;
-          HISTORY[key] = next > 40000 ? 40000 : next;
+          const next = HISTORY[key2] + depth * depth;
+          HISTORY[key2] = next > 40000 ? 40000 : next;
         }
         break;
       }
+    }
+
+    if (bestMove) {
+      const flag = best <= alpha0 ? 2 : best >= beta ? 1 : 0;
+      if (tt.size >= TT_LIMIT) tt.clear();
+      tt.set(key, { depth, score: best, flag, move: bestMove });
     }
     return best;
   }
@@ -322,6 +354,7 @@ const api = (function (E, Book) {
     deadline = Date.now() + timeLimit;
     killers = [];
     HISTORY.fill(0);
+    tt = new Map();
     const baseHistory = state.history.length;
 
     const entries = rootMoves.map(function (move) {

@@ -1,3 +1,5 @@
+import { downloadShareImage } from '../game/shareImage.js';
+
 const REASON_TEXT = {
   checkmate: '将杀',
   stalemate: '逼和',
@@ -29,7 +31,20 @@ export default function ResultBar({ visible, status, mode, humanColor, quote, on
         <span className="result-reason" id="resultReason">{REASON_TEXT[status.reason] || ''}</span>
         {quote ? <span className="result-quote">{quote}</span> : null}
       </div>
-      <button className="result-again" type="button" onClick={onAgain}>不服再来</button>
+      <div className="result-actions">
+        <button className="result-again" type="button" onClick={onAgain}>不服再来</button>
+        <button
+          className="result-share"
+          type="button"
+          onClick={function () {
+            downloadShareImage({
+              title: title,
+              reason: REASON_TEXT[status.reason] || '',
+              quote: quote || ''
+            });
+          }}
+        >存图</button>
+      </div>
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { createGame } from './game/store.js';
 import Board from './components/Board.jsx';
 import SettingsDrawer from './components/SettingsDrawer.jsx';
 import ResultBar from './components/ResultBar.jsx';
+import HistoryDrawer from './components/HistoryDrawer.jsx';
 import Toast from './components/Toast.jsx';
 
 export default function App() {
@@ -12,6 +13,8 @@ export default function App() {
 
   const [view, setView] = useState(function () { return store.getView(); });
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyGames, setHistoryGames] = useState([]);
   const settingsBtnRef = useRef(null);
 
   useEffect(function () {
@@ -32,9 +35,29 @@ export default function App() {
     if (settingsBtnRef.current) settingsBtnRef.current.focus();
   }, []);
 
+  const openHistory = useCallback(function () {
+    setHistoryGames(store.getHistory());
+    setSettingsOpen(false);
+    setHistoryOpen(true);
+  }, [store]);
+
+  const closeHistory = useCallback(function () {
+    setHistoryOpen(false);
+    if (settingsBtnRef.current) settingsBtnRef.current.focus();
+  }, []);
+
+  const clearHistory = useCallback(function () {
+    store.clearHistory();
+    setHistoryGames(store.getHistory());
+  }, [store]);
+
   useEffect(function () {
     function onKeyDown(event) {
       if (event.key === 'Escape') {
+        if (historyOpen) {
+          closeHistory();
+          return;
+        }
         if (settingsOpen) {
           closeSettings();
           return;
@@ -43,7 +66,7 @@ export default function App() {
         return;
       }
       if (event.ctrlKey || event.metaKey || event.altKey) return;
-      if (settingsOpen) return;
+      if (settingsOpen || historyOpen) return;
       if (event.target && /input|textarea/i.test(event.target.tagName)) return;
       const key = event.key.toLowerCase();
       if (key === 's') {
@@ -58,7 +81,7 @@ export default function App() {
     }
     document.addEventListener('keydown', onKeyDown);
     return function () { document.removeEventListener('keydown', onKeyDown); };
-  }, [settingsOpen, closeSettings, openSettings, store]);
+  }, [settingsOpen, historyOpen, closeSettings, closeHistory, openSettings, store]);
 
   return (
     <div className="shell">
@@ -99,8 +122,16 @@ export default function App() {
         onTheme={store.setTheme}
         onBg={store.setBg}
         onSound={store.setSound}
+        onVolume={store.setVolume}
         onExport={store.exportHistory}
-        onClear={store.clearHistory}
+        onOpenHistory={openHistory}
+      />
+
+      <HistoryDrawer
+        open={historyOpen}
+        games={historyGames}
+        onClose={closeHistory}
+        onClear={clearHistory}
       />
 
       <Toast text={view.toast} visible={view.toastVisible} />
