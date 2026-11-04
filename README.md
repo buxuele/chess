@@ -4,6 +4,8 @@ React 加 Vite 的纯前端国际象棋，可部署到 Vercel。
 
 在线试玩：https://chess-beryl-five.vercel.app/
 
+![主界面](效果图/72-README-主界面.png)
+
 ## 功能
 
 1. 人机三档难度与双人模式，AI 在 Web Worker 计算，失败回退主线程。
